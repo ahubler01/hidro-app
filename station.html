@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Plaza · station screen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/station.css">
+</head>
+<body>
+<div id="fit">
+  <div class="bar">
+    <div class="id"><svg viewBox="0 0 520 95" fill="#fff" fill-rule="evenodd" id="lg"></svg><b>The Plaza</b><span>Campo de las Naciones</span></div>
+    <div class="ctr e" id="ctrE"><div class="lab">Saved together<span>30 days, all of Spain</span></div><div class="num" id="nE"></div></div>
+    <div class="ctr c" id="ctrC"><div class="lab">CO₂ avoided together<span>30 days, all of Spain</span></div><div class="num" id="nC"></div></div>
+  </div>
+  <div id="scene"></div>
+  <div class="foot">
+    <div class="mid"><span class="big" id="norm">68%</span><span class="t">of members here made<br>a green move this month</span></div>
+    <div class="cupbox"><i id="cupI"></i><span class="t">Regional Cup<br>Madrid is 2nd</span></div>
+    <div class="join">Bring your<br>Hidro</div><img class="qr" src="assets/qr.svg" alt="QR code">
+  </div>
+</div>
+<script src="js/hidro.js"></script>
+<script src="js/data.js"></script>
+<script src="js/privacy.js"></script>
+<script src="js/plaza.js"></script>
+<script>
+(function () {
+  const H = HIDRO, PUB = PRIVACY.PUBLIC, $ = q => document.querySelector(q);
+  const fit = () => { const s = Math.min(innerWidth / 1920, innerHeight / 1080); $('#fit').style.transform = `translate(${(innerWidth - 1920 * s) / 2}px,${(innerHeight - 1080 * s) / 2}px) scale(${s})`; };
+  addEventListener('resize', fit); fit();
+  $('#lg').innerHTML = PLAZA.LOGO; $('#cupI').innerHTML = DATA.icon('trophy'); $('#norm').textContent = PUB.stationGreenShare + '%';
+  const plaza = PLAZA.build($('#scene'), 'station');
+
+  /* Steady ticker: one constant speed, never triggered by a payment (see privacy.js). */
+  const E = PRIVACY.steadyTicker({ total30: PUB.eur30 }), K = PRIVACY.steadyTicker({ total30: PUB.kg30 });
+  const t0 = performance.now();
+  const gb = (x, d) => x.toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+  function tick() {
+    const t = (performance.now() - t0) / 1000;
+    const e = gb(E(t), 2).split('.'), k = gb(K(t), 1).split('.');
+    $('#nE').innerHTML = `€${e[0]}<span class="dec">.${e[1]}</span>`;
+    $('#nC').innerHTML = `${k[0]}<span class="dec">.${k[1]}</span><small>kg</small>`;
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  /* A visitor lands: he joins, the neighbours cheer, a spark rises. No amount is ever shown. */
+  function rise(fromX, fromY, sel, n, col) {
+    const r = $(sel).getBoundingClientRect(), f = $('#fit').getBoundingClientRect(), s = f.width / 1920;
+    const tx = (r.left - f.left) / s + r.width / s * .5, ty = (r.top - f.top) / s + r.height / s * .6;
+    for (let i = 0; i < n; i++) {
+      const d = document.createElement('i'); d.className = 'fly'; d.style.background = col; d.style.left = fromX - 20 + 'px'; d.style.top = fromY - 20 + 'px'; $('#fit').appendChild(d);
+      const dx = tx - fromX + (i - n / 2) * 18, dy = ty - fromY;
+      d.animate([{ transform: 'translate(0,0) scale(.4)', opacity: 0 }, { transform: `translate(${dx * .2 + (i - n / 2) * 50}px,${dy * .36}px) scale(1.1)`, opacity: 1, offset: .35 }, { transform: `translate(${dx}px,${dy}px) scale(.5)`, opacity: .9, offset: .95 }, { transform: `translate(${dx}px,${dy}px) scale(.1)`, opacity: 0 }], { duration: 1150, delay: i * 90, easing: 'cubic-bezier(.4,0,.3,1)', fill: 'both' });
+      setTimeout(() => d.remove(), 1500 + i * 90);
+    }
+    setTimeout(() => { const c = $(sel); c.classList.remove('hit'); void c.offsetWidth; c.classList.add('hit'); }, 1000);
+  }
+  async function enter(cfg) {
+    await plaza.enter(cfg);
+    setTimeout(() => { rise(960, 760, '#ctrE', 5, '#E0FF48'); rise(960, 760, '#ctrC', 6, '#90FFBB'); }, 500);
+  }
+  const q = new URLSearchParams(location.search);
+  if (q.has('me')) plaza.place({});
+  if (!q.has('film')) addEventListener('click', () => enter({}));
+  window.STATION = { enter, plaza };
+})();
+</script>
+</body>
+</html>

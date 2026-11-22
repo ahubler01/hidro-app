@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hidro · scenes</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#fff;font-family:Outfit,"Century Gothic",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#111}
+svg{display:block}.hidro{overflow:visible}
+#fit{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;background:#fff}
+#fit>*{position:absolute}
+.spark{position:absolute;width:30px;height:30px;border-radius:50%;pointer-events:none;z-index:20;animation:spk 1s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes spk{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+</style>
+</head>
+<body>
+<div id="fit"></div>
+<script src="js/hidro.js"></script>
+<script src="js/data.js"></script>
+<script src="js/plaza.js"></script>
+<script>
+(function () {
+  const H = HIDRO, $ = q => document.querySelector(q), F = $('#fit');
+  const fit = () => { const s = Math.min(innerWidth / 1920, innerHeight / 1080); F.style.transform = `translate(${(innerWidth - 1920 * s) / 2}px,${(innerHeight - 1080 * s) / 2}px) scale(${s})`; };
+  addEventListener('resize', fit); fit();
+  window.__events = [];
+  const mark = n => window.__events.push([performance.now() / 1000, n]);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const { clamp, lerp, easeOut, easeInOut, smoother } = H;
+  const seg = (t, a, b, e = easeInOut) => e(clamp((t - a) / (b - a)));
+  const back = x => { x = clamp(x); const c = 1.70158; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const run = (dur, f) => new Promise(r => H.run(dur * 1000, f, r));
+  const svgEl = inner => { F.innerHTML = `<svg viewBox="0 0 1920 1080" width="1920" height="1080" style="left:0;top:0">${inner}</svg>`; return F.firstChild; };
+  const GRAD = `<defs><linearGradient id="gr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#90FFBB"/><stop offset=".38" stop-color="#38DCD6"/><stop offset=".72" stop-color="#4BB3E7"/><stop offset="1" stop-color="#0478B2"/></linearGradient></defs>`;
+
+  /* ---------- 1 · paying today: black, white, four seconds ---------- */
+  async function today() {
+    const s = svgEl(`
+      <g id="term" transform="translate(1060 540)"><rect x="-190" y="-290" width="380" height="580" rx="46" fill="#fff" stroke="#111" stroke-width="14"/><rect x="-138" y="-236" width="276" height="190" rx="18" fill="none" stroke="#111" stroke-width="10"/>
+        <g fill="#111">${[0, 1, 2].map(r => [0, 1, 2].map(c => `<circle cx="${-96 + c * 96}" cy="${32 + r * 84}" r="20"/>`).join('')).join('')}</g>
+        <text id="amt" x="0" y="-118" text-anchor="middle" font-size="70" font-weight="700" font-family="Outfit">€62.40</text>
+        <path id="chk" d="M-56 -140 l38 40 l78 -86" fill="none" stroke="#111" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="180" stroke-dashoffset="180"/></g>
+      <g id="rec"><path d="M940 250 h240 v-0 h-240z" fill="none"/></g>
+      <g id="phn"><rect x="-120" y="-250" width="240" height="500" rx="44" fill="#fff" stroke="#111" stroke-width="14"/><rect x="-34" y="-224" width="68" height="18" rx="9" fill="#111"/><g id="waves" fill="none" stroke="#111" stroke-width="10" stroke-linecap="round" opacity="0"><path d="M150 -70 q50 70 0 140"/><path d="M190 -104 q78 104 0 208"/></g></g>
+      <text id="clk" x="150" y="590" font-size="150" font-weight="300" font-family="Outfit" letter-spacing="-4">0.0 s</text>
+      <text id="bye" x="150" y="590" font-size="150" font-weight="700" font-family="Outfit" letter-spacing="-5" opacity="0">Goodbye.</text>`);
+    const q = i => s.querySelector('#' + i);
+    let paid = false;
+    await run(7, t => {
+      const inx = lerp(520, 640, seg(t, .3, 1.5)), outy = lerp(0, 900, seg(t, 3.0, 4.1)), iny = lerp(820, 0, seg(t, .1, 1.5));
+      q('phn').setAttribute('transform', `translate(${inx} ${540 + iny + outy}) rotate(${lerp(-12, 0, seg(t, .3, 1.5))})`);
+      q('waves').setAttribute('opacity', seg(t, 1.35, 1.6) * (1 - seg(t, 2.3, 2.7)));
+      if (t > 1.75 && !paid) { paid = true; mark('pay'); }
+      q('amt').setAttribute('opacity', 1 - seg(t, 1.7, 1.85)); q('chk').setAttribute('stroke-dashoffset', 180 * (1 - seg(t, 1.8, 2.15)));
+      const ck = clamp((t - .3) / (4.3 - .3)) * 4;
+      q('clk').textContent = ck.toFixed(1) + ' s';
+      q('clk').setAttribute('opacity', 1 - seg(t, 4.5, 4.8)); q('term').setAttribute('opacity', 1 - seg(t, 4.5, 5.0));
+      q('bye').setAttribute('opacity', seg(t, 4.9, 5.2)); q('clk').setAttribute('fill', '#111');
+    });
+  }
+
+  /* ---------- 2 · meet Hidro: grey, blue, green ---------- */
+  async function meet() {
+    F.innerHTML = `<div id="sh" style="left:1120px;top:850px;width:400px;height:34px;border-radius:50%;background:#E7ECEE"></div><div id="m" style="left:920px;top:250px;width:800px"></div>`;
+    const m = $('#m'), keys = ['volt', 'h2', 'bio', 'sol', 'aqua', 'jet'], pops = [2.5, 2.75, 3.0, 3.25, 3.5, 3.75];
+    await run(7.5, t => {
+      const shine = 4 + 88 * seg(t, 1.7, 4.0, x => easeInOut(x));
+      const atoms = keys.filter((k, i) => t > pops[i]);
+      const mood = t < 1.35 ? 'sleepy' : t < 2.2 ? 'happy' : t < 4.4 ? 'excited' : t < 5.2 ? 'joy' : 'happy';
+      m.innerHTML = H.svg({ shine, level: 5, atoms, head: t > 4.15 ? 'crown' : '', mood, ring: t > 4.3, stars: false });
+      const drop = t < .5 ? lerp(-620, 0, t * t / .25) : 0;
+      let dy = drop, sx = 1, sy = 1;
+      if (t >= .5 && t < 1.2) { const u = (t - .5) / .7, d = Math.exp(-4.5 * u) * Math.cos(u * 15); sx = 1 + .16 * d; sy = 1 - .2 * d; }
+      if (t > 4.15 && t < 4.9) { const u = (t - 4.15) / .75; if (u < .25) { sx = 1 + .08 * u * 4; sy = 1 - .12 * u * 4; } else if (u < .75) { dy = -70 * Math.sin(Math.PI * (u - .25) / .5); } else { const d = Math.exp(-5 * (u - .75) * 4) * Math.cos((u - .75) * 30); sx = 1 + .08 * d; sy = 1 - .12 * d; } }
+      H.applyPose(m, { dy, sx, sy });
+      pops.forEach((p, i) => { const g = m.querySelector(`.h-atom[data-a="${keys[i]}"]`); if (g && t < p + .45) g.setAttribute('transform', `translate(180 170) scale(${back((t - p) / .42).toFixed(3)}) translate(-180 -170)`); });
+      const acc = m.querySelector('.h-acc'); if (acc && t < 4.6) acc.setAttribute('transform', `translate(0 ${-120 * (1 - back((t - 4.15) / .4))})`);
+      if (t > 5.3 && t < 6.7) { const g = m.querySelector('.h-atom[data-a="h2"]'), u = (t - 5.3) / 1.4; g && g.setAttribute('transform', `rotate(${15 * Math.sin(u * 6 * Math.PI) * Math.sin(Math.PI * u)} 180 170)`); }
+      if ((t > 1.5 && t < 1.62) || (t > 5.0 && t < 5.1) || (t > 7.0 && t < 7.1)) m.querySelectorAll('.h-eye').forEach(e => { e.style.transform = 'scaleY(.1)'; });
+      $('#sh').style.transform = `scaleX(${(1 + dy / 900).toFixed(3)})`; $('#sh').style.opacity = t < .25 ? 0 : Math.min(1, (t - .25) * 4);
+    });
+  }
+
+  /* ---------- 3 · the spin on its own, for the live demo ---------- */
+  async function spin() {
+    F.innerHTML = `<div style="inset:0;background:linear-gradient(135deg,#90FFBB 0%,#38DCD6 38%,#4BB3E7 72%,#0478B2 100%)"></div><div id="sh" style="left:730px;top:868px;width:460px;height:36px;border-radius:50%;background:rgba(0,70,86,.18)"></div><div id="m" style="left:500px;top:210px;width:920px"></div>`;
+    const m = $('#m'), body = { level: 5, head: 'crown', stars: false };
+    m.innerHTML = H.svg({ ...body, shine: 60, mood: 'happy' });
+    await wait(500); mark('hidro');
+    setTimeout(() => PLAZA.burst(F, 960, 620, 560, 28), 2520);
+    await H.spin(m, { dur: 3, turns: 3, after: 'joy', cfg: body, from: 60, to: 94 });
+    H.wave(m); await wait(1400);
+  }
+
+  /* ---------- 4 · the object ---------- */
+  function poly(d, n = 160) { const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', d); const L = p.getTotalLength(), a = []; for (let i = 0; i < n; i++) { const q = p.getPointAtLength(L * i / n); a.push([q.x, q.y]); } return a; }
+  const rectPath = (x, y, w, h, r) => `M${x + w - r} ${y} A${r} ${r} 0 0 1 ${x + w} ${y + r} V${y + h - r} A${r} ${r} 0 0 1 ${x + w - r} ${y + h} H${x + r} A${r} ${r} 0 0 1 ${x} ${y + h - r} V${y + r} A${r} ${r} 0 0 1 ${x + r} ${y}Z`;
+  const area = a => a.reduce((s, p, i) => { const q = a[(i + 1) % a.length]; return s + p[0] * q[1] - q[0] * p[1]; }, 0);
+  const rot90 = (p, cx, cy, deg) => { const r = deg * Math.PI / 180, x = p[0] - cx, y = p[1] - cy; return [cx + x * Math.cos(r) - y * Math.sin(r), cy + x * Math.sin(r) + y * Math.cos(r)]; };
+  /* line the two outlines up so the morph does not twist */
+  function align(a, b) { if (area(a) * area(b) < 0) b = b.slice().reverse(); const n = a.length; let best = 0, bd = Infinity; const c = p => p.reduce((s, q) => [s[0] + q[0] / n, s[1] + q[1] / n], [0, 0]); const ca = c(a), cb = c(b); for (let k = 0; k < n; k += 2) { let d = 0; for (let i = 0; i < n; i += 4) { const p = a[i], q = b[(i + k) % n]; d += Math.hypot(p[0] - ca[0] - (q[0] - cb[0]), p[1] - ca[1] - (q[1] - cb[1])); } if (d < bd) { bd = d; best = k; } } return b.map((_, i) => b[(i + best) % n]); }
+  const dOf = a => 'M' + a.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z';
+  const tf = (d, s, x, y) => { const p = poly(d, 240); return p.map(q => [q[0] * s + x, q[1] * s + y]); };
+
+  const LX = { body: [560, 440, 430, 200, 46], pinY: [482, 540, 598], pin: [986, 168, 34], disc: [1452, 540, 190], push: 274 };
+  async function reveal() {
+    const M = ['M0 33.7 L24.5 41.75 V86 L0 94.4Z', 'M48.75 33.7 L72.8 41.75 V86 L48.75 94.4Z', 'M24.5 3 H60.1 A60.75 60.75 0 0 1 120.85 63.75 V91.85 H96.85 V30.4 A5.2 5.2 0 0 0 91.65 25.2 H24.5Z'];
+    const WS = 2.16, WX = 960 - 520 * WS / 2, WY = 596;                                     // wordmark scale and place
+    const s = svgEl(GRAD + `<rect id="bg" width="1920" height="1080" fill="#fff"/><g id="floodg"><clipPath id="cp"><circle id="cc" cx="1452" cy="540" r="0"/></clipPath><rect width="1920" height="1080" fill="url(#gr)" clip-path="url(#cp)"/></g>
+      <g id="all"><line id="cab" x1="-40" y1="540" x2="420" y2="540" stroke="#111" stroke-width="30" stroke-linecap="round"/>
+      <path id="disc" fill="#111" fill-rule="evenodd"/><g id="slots" fill="#fff"></g>
+      <path id="p1" fill="#111"/><path id="p2" fill="#111"/><path id="p3" fill="#111"/><path id="bd" fill="#111"/><rect id="scr" rx="18" fill="#fff"/>
+      <g id="two" fill="#fff" text-anchor="middle" font-family="Outfit" font-weight="700"><text x="1452" y="590" font-size="200" letter-spacing="-8">2</text><text x="1452" y="652" font-size="44" font-weight="500">cent</text></g>
+      <path id="flow" d="M-40 540 H1300" stroke="url(#gr)" stroke-width="30" stroke-linecap="round" fill="none" opacity="0"/></g>
+      <g id="lbl" font-family="Outfit" font-size="44" font-weight="500" fill="#111" text-anchor="middle"><text id="l1" x="230" y="880">The change</text><text id="l2" x="660" y="880">gow</text><text id="l3" x="960" y="880">What drivers want</text><text id="l4" x="1452" y="880">The driver</text></g>
+      <g id="eve" fill="#004656" fill-rule="evenodd"></g>
+      <text id="mk" x="${WX - 4}" y="${WY - 54}" font-family="Outfit" font-weight="700" font-size="150" letter-spacing="-6" fill="#004656" opacity="0">make your</text>`);
+    const hd = document.createElement('div'); hd.style.cssText = 'left:0;top:0;width:760px;transform-origin:50% 60.7%;opacity:0'; F.appendChild(hd);
+    const q = i => s.querySelector('#' + i);
+    const [bx, by, bw, bh, br] = LX.body, [px, pl, ph] = LX.pin, [dx, dy0, dr] = LX.disc;
+    /* targets: bottom pin -> first panel, middle pin -> second, top pin melts into the arch */
+    const T = M.map(d => tf(d, WS, WX, WY));
+    const N = 240, pinAt = (y, off) => poly(rectPath(px + off, y - ph / 2, pl, ph, 13), N), bodyAt = off => poly(rectPath(bx + off, by, bw, bh, br), N);
+    const src = { p1: pinAt(LX.pinY[2], LX.push), p2: pinAt(LX.pinY[1], LX.push), p3: pinAt(LX.pinY[0], LX.push), bd: bodyAt(LX.push) };
+    const C = [bx + bw / 2 + LX.push, 540];
+    const r90 = k => src[k].map(p => rot90(p, C[0], C[1], 90));
+    const leg = tf('M96.85 60 H120.85 V91.85 H96.85Z', WS, WX, WY);
+    const tgt = { p1: align(r90('p1'), T[0]), p2: align(r90('p2'), T[1]), p3: align(r90('p3'), leg), bd: align(r90('bd'), T[2]) };
+    const eveP = PLAZA.LOGO.split('</path>').join('').match(/<path d="[^"]+"\/>/g);
+    let clicked = false, sounded = false;
+    const oC = [179.2 * WS + WX, 47.45 * WS + WY], oR = [50.1 * WS, 47.5 * WS], oH = [28.7 * WS, 27.7 * WS];
+    const K = { push0: 5.5, push1: 5.75, click: 6.03, pulse: 6.6, flood: 6.55, born: 6.8, jump: 10.05, turn: 10.2, ring: 10.55, eve: 11.45, words: 12.1 };
+    const ell = (cx, cy, rx, ry) => `M${cx - rx} ${cy} A${rx} ${ry} 0 1 1 ${cx + rx} ${cy} A${rx} ${ry} 0 1 1 ${cx - rx} ${cy}Z`;
+    await run(14.8, t => {
+      /* assemble */
+      const a = seg(t, 2.7, 3.6), b = seg(t, 3.5, 4.3), push = t < K.push1 ? -30 * seg(t, K.push0, K.push1) : lerp(-30, LX.push, seg(t, K.push1, K.click, x => x * x * x));
+      const appear = i => seg(t, .1 + i * .46, .5 + i * .46, easeOut);
+      const lab = (i, at) => q('l' + i).setAttribute('opacity', seg(t, at, at + .3) * (1 - seg(t, 2.45, 2.75)));
+      lab(1, .35); lab(2, .81); lab(3, 1.27); lab(4, 1.73);
+      const col = seg(t, K.pulse, K.pulse + .5), mor = clamp((t - K.turn) / 1.0);
+      const ink = H.mix('#111111', '#004656', clamp((t - K.click) / .6));
+      if (t >= K.click && !clicked) { clicked = true; mark('click'); }
+      if (t >= K.born && !sounded) { sounded = true; mark('hidro'); }
+      const shake = t > K.click && t < K.click + .3 ? Math.sin((t - K.click) * 90) * 8 * (1 - (t - K.click) / .3) : 0;
+      q('all').setAttribute('transform', `translate(${shake} 0)`);
+      /* colour floods out of the socket */
+      q('cc').setAttribute('cx', dx); q('cc').setAttribute('r', 1900 * seg(t, K.flood, K.flood + 1.05));
+      /* cable, and the current that runs through it */
+      const cabEnd = lerp(420, bx + 8, a) + push * b, retract = seg(t, K.turn, K.turn + .55);
+      q('cab').setAttribute('x1', lerp(-40, cabEnd, retract)); q('cab').setAttribute('x2', cabEnd); q('cab').setAttribute('opacity', appear(0) * (retract >= 1 ? 0 : 1)); q('cab').setAttribute('stroke', ink);
+      const fl = clamp((t - K.click) / (K.pulse - K.click));
+      q('flow').setAttribute('stroke', '#E0FF48'); q('flow').setAttribute('opacity', fl > 0 && fl < 1 ? 1 : 0); q('flow').setAttribute('stroke-dasharray', '360 2400'); q('flow').setAttribute('stroke-dashoffset', lerp(360, -1320, fl * fl * (3 - 2 * fl)));
+      if (mor <= 0) {
+        /* the phone turns into the body of the plug, the bars turn into its pins */
+        const cx = lerp(660, bx + bw / 2, a) + push * b, w = lerp(200, bh, a), hgt = 430;
+        const body = poly(rectPath(-w / 2, -hgt / 2, w, hgt, br), N).map(p => { const r = rot90(p, 0, 0, 90 * a); return [r[0] + cx, r[1] + 540]; });
+        q('bd').setAttribute('d', dOf(body)); q('bd').setAttribute('opacity', appear(1));
+        const so = 1 - seg(t, 2.6, 2.95), sw = 168, sh = 378; q('scr').setAttribute('opacity', so * appear(1)); q('scr').setAttribute('x', 660 - sw / 2); q('scr').setAttribute('y', 540 - sh / 2 - 4); q('scr').setAttribute('width', sw); q('scr').setAttribute('height', sh);
+        ['p3', 'p2', 'p1'].forEach((k, i) => {
+          const x0 = 960 + (i - 1) * 62, y0 = 540, x1 = px + pl / 2 + push, y1 = LX.pinY[i];
+          const cX = lerp(x0, x1, b), cY = lerp(y0, y1, b), r = lerp(0, 90, b);
+          const bar = poly(rectPath(-ph / 2, -pl / 2, ph, pl, 13), N).map(p => { const z = rot90(p, 0, 0, r); return [z[0] + cX, z[1] + cY]; });
+          q(k).setAttribute('d', dOf(bar)); q(k).setAttribute('opacity', appear(2));
+        });
+      } else {
+        q('scr').setAttribute('opacity', 0);
+        const turn = easeInOut(clamp(mor / .68)), melt = easeInOut(clamp((mor - .26) / .74));
+        ['p1', 'p2', 'p3', 'bd'].forEach(k => { const d = src[k].map((p, i) => { const r = rot90(p, C[0], C[1], 90 * turn), g = tgt[k][i]; return [lerp(r[0], g[0], melt), lerp(r[1], g[1], melt)]; }); q(k).setAttribute('d', dOf(d)); });
+      }
+      const pinCol = H.mix(ink, '#E0FF48', seg(t, K.pulse - .16, K.pulse + .1));
+      ['p1', 'p2', 'p3'].forEach(k => q(k).setAttribute('fill', mor > 0 ? H.mix('#E0FF48', '#004656', clamp(mor * 1.5)) : pinCol));
+      q('bd').setAttribute('fill', ink);
+      /* coin, then socket, then the ring of the o */
+      const rg = seg(t, K.ring, K.ring + .95), ap = appear(3), rr = dr * (ap < 1 ? back(ap) : 1);
+      const ox = lerp(dx, oC[0], rg), oy = lerp(dy0, oC[1], rg), hl = seg(t, K.ring, K.ring + .7);
+      q('disc').setAttribute('d', ap > 0 ? ell(ox, oy, lerp(rr, oR[0], rg), lerp(rr, oR[1], rg)) + (hl > 0 ? ell(ox, oy, oH[0] * hl, oH[1] * hl) : '') : '');
+      q('disc').setAttribute('fill', ink);
+      q('two').setAttribute('opacity', ap * (1 - seg(t, 3.4, 3.8)));
+      const sl = seg(t, 3.7, 4.3);
+      q('slots').setAttribute('opacity', t < K.click - .02 ? 1 : 0);
+      q('slots').innerHTML = sl > 0 ? LX.pinY.map(y => `<rect x="${px + LX.push - 40}" y="${y - ph / 2 - 4}" width="${(pl + 44) * sl}" height="${ph + 8}" rx="15"/>`).join('') : '';
+      /* Hidro wakes in the socket, spins, jumps out and lands on the word */
+      if (t > K.born - .02) {
+        const ts = t - K.born, born = back(clamp(ts / .4)), jump = clamp((t - K.jump) / 1.4), scale0 = dr / 72 * 360 / 760;
+        const k = lerp(scale0, .62, easeInOut(jump)), land = [1338, WY - 6];
+        const hx = lerp(dx, land[0], easeInOut(jump)), hy = lerp(dy0, land[1] - 170, easeInOut(jump)) - 300 * Math.sin(Math.PI * jump);
+        hd.style.opacity = 1;
+        hd.innerHTML = H.svg({ shine: lerp(16, 94, seg(ts, .3, 1.5)), level: 5, head: ts > 2.5 ? 'crown' : '', stars: false, mood: 'joy', ring: ts > 2.5 });
+        hd.style.transform = `translate(${hx - 380}px,${hy - 359}px) scale(${k * Math.max(.001, born)})`;
+        let p = ts < 3 ? H.spinPose(clamp(ts, 0, 3), 3, 3) : { mood: 'joy' };
+        if (ts < 3) p.dy *= .3;
+        if (jump > 0 && jump < 1) p = { rot: 360 * easeInOut(jump), vel: .4 * Math.sin(Math.PI * jump), mood: 'joy' };
+        if (jump >= 1) { const u = t - K.jump - 1.4, d = Math.exp(-5 * u) * Math.cos(u * 14); p = { sx: 1 + .12 * d, sy: 1 - .16 * d, mood: u < .6 ? 'joy' : 'happy' }; }
+        H.applyPose(hd, p);
+        hd.querySelectorAll('.h-atom').forEach((g, i) => { const e = back((ts - .1 - i * .05) / .35); if (ts < 1) g.style.transform = `translate(180px,170px) scale(${Math.max(.01, e)}) translate(-180px,-170px)`; });
+        const ac = hd.querySelector('.h-acc'); if (ac && ts > 2.5 && ts < 3) ac.setAttribute('transform', `translate(0 ${-110 * (1 - back((ts - 2.5) / .4))})`);
+        if (t > 12.5 && t < 14.1) { const u = (t - 12.5) / 1.6, g = hd.querySelector('.h-atom[data-a="h2"]'); g && g.setAttribute('transform', `rotate(${16 * Math.sin(u * 6 * Math.PI) * Math.sin(Math.PI * u)} 180 170)`); }
+      }
+      /* e v e, and the words */
+      const ev = seg(t, K.eve, K.eve + .6, easeOut);
+      q('eve').innerHTML = ev > 0 ? `<g transform="translate(${WX - 150 * (1 - ev)} ${WY}) scale(${WS})" opacity="${ev}">${eveP[3]}${eveP[5]}${eveP[6]}</g>` : '';
+      q('mk').setAttribute('opacity', seg(t, K.words, K.words + .45)); q('mk').setAttribute('transform', `translate(${-40 * (1 - seg(t, K.words, K.words + .45, easeOut))} 0)`);
+    });
+  }
+
+  /* ---------- 5 · closing loop ---------- */
+  async function closing() {
+    F.innerHTML = `<div style="inset:0;background:linear-gradient(135deg,#90FFBB 0%,#38DCD6 38%,#4BB3E7 72%,#0478B2 100%)"></div><div id="dots" style="inset:0"></div><div id="sh" style="left:1440px;top:1000px;width:300px;height:26px;border-radius:50%;background:rgba(0,70,86,.2)"></div><div id="m" style="left:1290px;top:560px;width:600px"></div>`;
+    const m = $('#m'), DUR = 8;
+    const dots = Array.from({ length: 16 }, (_, i) => ({ x: (i * 397) % 1920, r: 10 + (i * 7) % 22, sp: 1 + (i % 3), ph: (i * .37) % 1, c: ['#E0FF48', '#FFFFFF', '#F3BDFF', '#90FFBB'][i % 4] }));
+    const frame = t => {
+      const u = t / DUR;
+      $('#dots').innerHTML = dots.map(d => { const y = 1140 - (((u * d.sp + d.ph) % 1) * 1280); return `<div style="position:absolute;left:${d.x + 26 * Math.sin((u * 2 + d.ph) * 6.283)}px;top:${y}px;width:${d.r * 2}px;height:${d.r * 2}px;border-radius:50%;background:${d.c};opacity:.34"></div>`; }).join('');
+      const mood = t < 1.1 ? 'joy' : t < 3.6 ? 'happy' : t < 5.9 ? 'joy' : 'happy';
+      m.innerHTML = H.svg({ shine: 94, level: 5, head: 'crown', mood, stars: true });
+      let p = { dy: -8 * Math.sin(u * 4 * 6.283) };
+      const hop = (a, h) => { const v = (t - a) / .75; if (v > 0 && v < 1) { if (v < .2) p = { sx: 1 + .4 * v, sy: 1 - .6 * v }; else if (v < .75) p = { dy: -h * Math.sin(Math.PI * (v - .2) / .55), sx: .97, sy: 1.04 }; else { const d = Math.exp(-4 * (v - .75) * 4) * Math.cos((v - .75) * 32); p = { sx: 1 + .08 * d, sy: 1 - .12 * d }; } } };
+      hop(.15, 70); hop(5.6, 90);
+      if (t > 3.6 && t < 5.4) { const s = H.spinPose((t - 3.6) / 1.8 * 3, 3, 2); p = { ...s, dy: s.dy * .7 }; }
+      H.applyPose(m, { ...p, mood: p.mood && t > 3.6 && t < 5.4 ? p.mood : mood });
+      if (t > 1.4 && t < 3.2) { const v = (t - 1.4) / 1.8, g = m.querySelector('.h-atom[data-a="h2"]'); g && g.setAttribute('transform', `rotate(${16 * Math.sin(v * 8 * Math.PI) * Math.sin(Math.PI * v)} 180 170)`); }
+      if ((t > 3.3 && t < 3.4) || (t > 7.2 && t < 7.3)) m.querySelectorAll('.h-eye').forEach(e => { e.style.transform = 'scaleY(.1)'; });
+      $('#sh').style.transform = `scaleX(${(1 + (p.dy || 0) / 260).toFixed(3)})`;
+    };
+    frame(0); await run(DUR, frame);
+  }
+
+  const SC = { today, meet, spin, reveal, closing };
+  window.SCENE = SC;
+  const q = new URLSearchParams(location.search), name = q.get('scene') || 'meet';
+  if (!q.has('film')) addEventListener('load', () => setTimeout(SC[name], 500));
+})();
+</script>
+</body>
+</html>
