@@ -27,15 +27,15 @@
 
   /* ---------- atoms: each one is a real Moeve project ---------- */
   const ATOMS = {
-    h2:   { n: 'H₂',   t: 'Green hydrogen', d: 'Andalusian Green Hydrogen Valley, 2 GW', f: '#F3BDFF', s: '#D78CF0', lv: 2, x: 64,   y: -121, r: 35 },
-    volt: { n: 'Volt', t: 'Fast charging',  d: '420 ultra-fast charging points',         f: '#E0FF48', s: '#B9D600', lv: 3, x: -59,  y: -111, r: 30 },
-    bio:  { n: 'Bio',  t: '2G biofuels',    d: 'Huelva plant, producing from 2027',      f: '#90FFBB', s: '#4FE08A', lv: 3, x: 134,  y: -28,  r: 35 },
-    sol:  { n: 'Sol',  t: 'Solar power',    d: 'Renewable electricity',                  f: '#FFCFB5', s: '#FF9F6E', lv: 4, x: -123, y: -26,  r: 30 },
-    aqua: { n: 'Aqua', t: 'Water for H₂',   d: 'Green hydrogen starts with water',       f: '#8FD6FF', s: '#45AEE8', lv: 5, x: 130,  y: 42,   r: 35 },
-    jet:  { n: 'Jet',  t: 'SAF',            d: 'Sustainable jet fuel, 8 airlines',       f: '#FFB3D1', s: '#F27AA8', lv: 5, x: -120, y: 39,   r: 30 },
+    h2:   { n: 'H₂',   t: 'Green hydrogen', d: 'Andalusian Green Hydrogen Valley, 2 GW', f: '#F3BDFF', s: '#D78CF0', lv: 2, x: 90,   y: -108, r: 35 },
+    volt: { n: 'Volt', t: 'Fast charging',  d: '420 ultra-fast charging points',         f: '#E0FF48', s: '#B9D600', lv: 3, x: -83,  y: -100, r: 30 },
+    bio:  { n: 'Bio',  t: '2G biofuels',    d: 'Huelva plant, producing from 2027',      f: '#90FFBB', s: '#4FE08A', lv: 3, x: 136,  y: -34,  r: 35 },
+    sol:  { n: 'Sol',  t: 'Solar power',    d: 'Renewable electricity',                  f: '#FFCFB5', s: '#FF9F6E', lv: 4, x: -129, y: -30,  r: 30 },
+    aqua: { n: 'Aqua', t: 'Water for H₂',   d: 'Green hydrogen starts with water',       f: '#8FD6FF', s: '#45AEE8', lv: 5, x: 133,  y: 48,   r: 35 },
+    jet:  { n: 'Jet',  t: 'SAF',            d: 'Sustainable jet fuel, 8 airlines',       f: '#FFB3D1', s: '#F27AA8', lv: 5, x: -126, y: 43,   r: 30 },
   };
   const ICONS = {
-    h2:   `<text x="0" y="13" font-size="36" font-weight="800" text-anchor="middle" fill="${P}" font-family="Outfit,sans-serif">H₂</text>`,
+    h2:   `<g transform="translate(-1.6 -1.6) scale(.96)" fill="none" stroke="${P}" stroke-linecap="round" stroke-linejoin="round"><path d="M-17 -15V13 M2 -15V13 M-17 -1H2" stroke-width="7"/><path d="M11.5 9.2 A5 5 0 1 1 20 12.8 L11.5 21 H21.5" stroke-width="4.4"/></g>`,
     volt: `<path d="M5.2 -26 L-15.6 5.2 L-1.7 5.2 L-6.9 26 L15.6 -6.9 L1.7 -6.9Z" fill="${P}" stroke="${P}" stroke-width="3.5" stroke-linejoin="round"/>`,
     bio:  `<path d="M-19 19 Q-22 -19 21 -21 Q22 19 -19 19Z" fill="${P}"/><path d="M-15 15 L10 -10" stroke="#90FFBB" stroke-width="4.2" stroke-linecap="round"/>`,
     sol:  [0, 45, 90, 135, 180, 225, 270, 315].map(a => { const c = Math.cos(a * Math.PI / 180), s = Math.sin(a * Math.PI / 180); return `<line x1="${17 * c}" y1="${17 * s}" x2="${26 * c}" y2="${26 * s}" stroke="${P}" stroke-width="5.2" stroke-linecap="round"/>`; }).join('') + `<circle r="11" fill="${P}"/>`,
@@ -44,11 +44,16 @@
   };
   const atomsFor = lv => Object.keys(ATOMS).filter(k => ATOMS[k].lv <= lv);
 
-  function crescent(x, y, r) { return `M${x + .95 * r} ${y - .3 * r} A${r} ${r} 0 0 1 ${x - .55 * r} ${y + .82 * r} A${.95 * r} ${.95 * r} 0 0 0 ${x + .95 * r} ${y - .3 * r}Z`; }
+  /* Shade = circle minus the same circle moved up-left, so it never leaves the outline. */
+  function crescent(x, y, r, k = .17) {
+    const d = k * r, u = d / 2, q = Math.sqrt(r * r - d * d / 2) / Math.SQRT2, n = v => +v.toFixed(2);
+    const dx = u, hx = q;
+    return `M${n(x - dx + hx)} ${n(y - dx - hx)} A${r} ${r} 0 1 1 ${n(x - dx - hx)} ${n(y - dx + hx)} A${r} ${r} 0 0 0 ${n(x - dx + hx)} ${n(y - dx - hx)}Z`;
+  }
   function ball(x, y, r, f, s, sw) {
-    return `<circle cx="${x}" cy="${y}" r="${r}" fill="${f}"/><path d="${crescent(x, y, r)}" fill="${s}"/>` +
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="${f}"/><path d="${crescent(x, y, r, r > 60 ? .14 : .17)}" fill="${s}"/>` +
       `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${P}" stroke-width="${sw}"/>` +
-      `<ellipse cx="${x - .38 * r}" cy="${y - .45 * r}" rx="${.26 * r}" ry="${.15 * r}" transform="rotate(-35 ${x - .38 * r} ${y - .45 * r})" fill="#fff" opacity=".85"/>`;
+      `<ellipse cx="${x - .38 * r}" cy="${y - .45 * r}" rx="${.26 * r}" ry="${.15 * r}" transform="rotate(-35 ${x - .38 * r} ${y - .45 * r})" fill="#fff" opacity=".9"/>`;
   }
   function star(x, y, k, fill, sw = 2.5) {
     return `<path d="M${x} ${y - k} Q${x + k * .18} ${y - k * .18} ${x + k} ${y} Q${x + k * .18} ${y + k * .18} ${x} ${y + k} Q${x - k * .18} ${y + k * .18} ${x - k} ${y} Q${x - k * .18} ${y - k * .18} ${x} ${y - k}Z" fill="${fill}" stroke="${P}" stroke-width="${sw}" stroke-linejoin="round"/>`;
@@ -56,11 +61,13 @@
 
   /* ---------- faces ---------- */
   const X = 180, Y = 170, R = 72;
-  const cheeks = `<ellipse cx="${X - 43}" cy="${Y + 13}" rx="11" ry="6" fill="#FF8FC2" opacity=".85"/><ellipse cx="${X + 43}" cy="${Y + 13}" rx="11" ry="6" fill="#FF8FC2" opacity=".85"/>`;
+  const cheeks = `<ellipse cx="${X - 43}" cy="${Y + 13}" rx="11" ry="6" fill="#FF9CCB"/><ellipse cx="${X + 43}" cy="${Y + 13}" rx="11" ry="6" fill="#FF9CCB"/>`;
   const eye = ex => `<g class="h-eye" style="transform-origin:${ex}px ${Y - 7}px"><ellipse cx="${ex}" cy="${Y - 7}" rx="11" ry="14.4" fill="${P}"/><circle cx="${ex - 3}" cy="${Y - 13}" r="4.7" fill="#fff"/><circle cx="${ex + 4}" cy="${Y - 2}" r="2.1" fill="#fff"/></g>`;
   const eyes = eye(X - 23) + eye(X + 23);
-  const smile = `<path d="M${X - 14.4} ${Y + 13} Q${X} ${Y + 34.6} ${X + 14.4} ${Y + 13}Z" fill="${P}" stroke="${P}" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="${X}" cy="${Y + 24}" rx="6.5" ry="3.6" fill="#FF8FC2"/>`;
-  const laugh = `<path d="M${X - 18} ${Y + 11} Q${X} ${Y + 45} ${X + 18} ${Y + 11}Z" fill="${P}" stroke="${P}" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="${X}" cy="${Y + 28}" rx="8" ry="4.5" fill="#FF8FC2"/>`;
+  /* fill, tongue, then outline: the tongue stays inside the mouth */
+  const mouth = (w, top, deep, tx, ty, ry) => { const d = `M${X - w} ${Y + top} C${X - w * .74} ${Y + deep} ${X + w * .74} ${Y + deep} ${X + w} ${Y + top} Q${X} ${Y + top + 2} ${X - w} ${Y + top}Z`; return `<path d="${d}" fill="${P}"/><ellipse cx="${X}" cy="${Y + ty}" rx="${tx}" ry="${ry}" fill="#FF8FC2"/><path d="${d}" fill="none" stroke="${P}" stroke-width="4" stroke-linejoin="round"/>`; };
+  const smile = mouth(14.4, 12, 34, 6.4, 25, 3.6);
+  const laugh = mouth(18.5, 10.5, 43, 8.6, 30, 5);
   const swirl = ex => `<path d="M${ex} ${Y - 7} m0 0 c4 -2 6 4 1 6 c-7 2 -11 -6 -6 -11 c7 -6 17 0 15 9 c-2 9 -14 12 -20 5" fill="none" stroke="${P}" stroke-width="4" stroke-linecap="round"/>`;
   const arcEye = (ex, up) => `<path d="M${ex - 11} ${Y - 4} Q${ex} ${Y - 4 + (up ? -15 : 13)} ${ex + 11} ${Y - 4}" fill="none" stroke="${P}" stroke-width="5.4" stroke-linecap="round"/>`;
   const FACES = {
@@ -88,14 +95,18 @@
   function head(h) {
     const x = X, y = Y;
     if (h === 'cap') return `<path d="M${x - 58} ${y - 34} C${x - 58} ${y - 92} ${x + 58} ${y - 92} ${x + 58} ${y - 34}Z" fill="#4BB3E7" stroke="${P}" stroke-width="6" stroke-linejoin="round"/>` +
-      `<path d="M${x + 46} ${y - 42} Q${x + 92} ${y - 50} ${x + 100} ${y - 32} Q${x + 74} ${y - 26} ${x + 44} ${y - 32}Z" fill="${P}" stroke="${P}" stroke-width="4" stroke-linejoin="round"/>` +
+      `<path d="M${x + 46} ${y - 42} Q${x + 82} ${y - 50} ${x + 90} ${y - 34} Q${x + 70} ${y - 27} ${x + 44} ${y - 32}Z" fill="${P}" stroke="${P}" stroke-width="4" stroke-linejoin="round"/>` +
       `<circle cx="${x}" cy="${y - 80}" r="7" fill="#E0FF48" stroke="${P}" stroke-width="3.5"/><path d="M${x - 30} ${y - 48} h22" stroke="#E0FF48" stroke-width="7" stroke-linecap="round"/>`;
     if (h === 'hat') return `<ellipse cx="${x}" cy="${y - 46}" rx="84" ry="16" fill="#F3BDFF" stroke="${P}" stroke-width="6"/>` +
       `<path d="M${x - 48} ${y - 50} Q${x - 46} ${y - 112} ${x} ${y - 114} Q${x + 46} ${y - 112} ${x + 48} ${y - 50}Z" fill="#F3BDFF" stroke="${P}" stroke-width="6" stroke-linejoin="round"/>` +
       `<path d="M${x - 47} ${y - 64} Q${x} ${y - 56} ${x + 47} ${y - 64} L${x + 48} ${y - 52} Q${x} ${y - 44} ${x - 48} ${y - 52}Z" fill="#90FFBB" stroke="${P}" stroke-width="4" stroke-linejoin="round"/>`;
     if (h === 'crown') {
-      const p = [[-44.6, -66.2], [-48.1, -110.8], [-20.1, -87.8], [0, -123.7], [20.1, -87.8], [48.1, -110.8], [44.6, -66.2]].map(([a, b]) => `${x + a} ${y + b}`).join(' L');
-      return `<path d="M${p}Z" fill="#E0FF48" stroke="${P}" stroke-width="6" stroke-linejoin="round"/><circle cx="${x}" cy="${y - 82}" r="6.5" fill="#F3BDFF" stroke="${P}" stroke-width="3"/><circle cx="${x - 27.6}" cy="${y - 76.6}" r="4.3" fill="#8FD6FF" stroke="${P}" stroke-width="2.5"/><circle cx="${x + 27.6}" cy="${y - 76.6}" r="4.3" fill="#90FFBB" stroke="${P}" stroke-width="2.5"/>`;
+      const at = (a, b) => `${x + a} ${y + b}`;
+      const base = `Q${at(0, -48)} ${at(-38, -60)}`;
+      const d = `M${at(-38, -60)} L${at(-43, -98)} L${at(-20.5, -86)} L${at(0, -116)} L${at(20.5, -86)} L${at(43, -98)} L${at(38, -60)} ${base}Z`;
+      const rim = `M${at(-38, -60)} L${at(-39.1, -68)} Q${at(0, -56)} ${at(39.1, -68)} L${at(38, -60)} ${base}Z`;
+      return `<path d="${d}" fill="#E0FF48"/><path d="${rim}" fill="#B9D600"/><path d="${d}" fill="none" stroke="${P}" stroke-width="6" stroke-linejoin="round"/>` +
+        `<circle cx="${x}" cy="${y - 80}" r="6" fill="#F3BDFF" stroke="${P}" stroke-width="3"/><circle cx="${x - 24.5}" cy="${y - 77.5}" r="4" fill="#8FD6FF" stroke="${P}" stroke-width="3"/><circle cx="${x + 24.5}" cy="${y - 77.5}" r="4" fill="#90FFBB" stroke="${P}" stroke-width="3"/>`;
     }
     if (h === 'band') return `<path d="M${x - 66} ${y - 30} Q${x} ${y - 66} ${x + 66} ${y - 30} L${x + 61} ${y - 46} Q${x} ${y - 84} ${x - 61} ${y - 46}Z" fill="#E0FF48" stroke="${P}" stroke-width="5" stroke-linejoin="round"/>`;
     return '';
@@ -131,18 +142,20 @@
     o += `<g class="h-trail" opacity="0" fill="none" stroke-linecap="round">` +
       [['#E0FF48', 146, 14], ['#90FFBB', 164, 10], ['#F3BDFF', 128, 8]].map(([col, r, w], i) => `<path d="${arc(r, i * 120 - 60, i * 120 + 30)}" stroke="${col}" stroke-width="${w}"/><path d="${arc(r, i * 120 + 118, i * 120 + 190)}" stroke="${col}" stroke-width="${w}" opacity=".8"/>`).join('') + `</g>`;
     o += `<g class="h-body"><g class="h-rot">`;
-    o += `<g class="h-ring" opacity="${ring}"><ellipse cx="${X}" cy="${Y + 4}" rx="172" ry="56" transform="rotate(-14 ${X} ${Y})" fill="none" stroke="#E0FF48" stroke-width="8"/><ellipse cx="${X}" cy="${Y + 4}" rx="172" ry="56" transform="rotate(-14 ${X} ${Y})" fill="none" stroke="${P}" stroke-width="2.4" stroke-dasharray="5 12"/></g>`;
-    o += `<g class="h-feet"><ellipse class="h-foot h-footL" cx="${X - 27}" cy="${Y + 73}" rx="15" ry="11" fill="${f}" stroke="${P}" stroke-width="4"/><ellipse class="h-foot h-footR" cx="${X + 27}" cy="${Y + 73}" rx="15" ry="11" fill="${f}" stroke="${P}" stroke-width="4"/></g>`;
+    const orbit = (col, w) => `<ellipse cx="${X}" cy="${Y + 6}" rx="150" ry="62" transform="rotate(-14 ${X} ${Y})" fill="none" stroke="${col}" stroke-width="${w}"/>`;
+    o += `<g class="h-ring" opacity="${ring}">` + orbit(P, 12) + orbit('#E0FF48', 6.4) + `</g>`;
+    o += `<g class="h-feet"><ellipse class="h-foot h-footL" cx="${X - 27}" cy="${Y + 73}" rx="15.5" ry="11.5" fill="${s}" stroke="${P}" stroke-width="6"/><ellipse class="h-foot h-footR" cx="${X + 27}" cy="${Y + 73}" rx="15.5" ry="11.5" fill="${s}" stroke="${P}" stroke-width="6"/></g>`;
     o += `<g class="h-atoms">` + A.map(k => {
       const a = ATOMS[k], x = X + a.x, y = Y + a.y, af = mix(a.f, '#DDE4E7', grey), as = mix(a.s, '#B9C6CB', grey);
-      return `<g class="h-atom" data-a="${k}"><line x1="${X}" y1="${Y}" x2="${x}" y2="${y}" stroke="${P}" stroke-width="22" stroke-linecap="round"/><line x1="${X}" y1="${Y}" x2="${x}" y2="${y}" stroke="${af}" stroke-width="12" stroke-linecap="round"/>` +
+      return `<g class="h-atom" data-a="${k}"><line x1="${X}" y1="${Y}" x2="${x}" y2="${y}" stroke="${P}" stroke-width="24" stroke-linecap="round"/><line x1="${X}" y1="${Y}" x2="${x}" y2="${y}" stroke="${af}" stroke-width="12" stroke-linecap="round"/><line x1="${X}" y1="${Y}" x2="${(X + a.x * 82 / Math.hypot(a.x, a.y)).toFixed(1)}" y2="${(Y + a.y * 82 / Math.hypot(a.x, a.y)).toFixed(1)}" stroke="${as}" stroke-width="12"/>` +
         ball(x, y, a.r, af, as, 6) + `<g transform="translate(${x} ${y + 1}) scale(${a.r / 52})" opacity="${lerp(1, .5, grey)}">${ICONS[k]}</g></g>`;
     }).join('') + `</g>`;
     o += `<g class="h-core">` + ball(X, Y, R, f, s, 7) +
       Object.keys(FACES).map(k => `<g class="h-face" data-m="${k}" ${k === mood ? '' : 'style="display:none"'}>${FACES[k]}</g>`).join('') +
       `<g class="h-acc" style="filter:grayscale(${(grey * .92).toFixed(2)})">` + glasses(c.glasses) + head(c.head) + extra(c.extra) + `</g></g>`;
     o += `</g>`;
-    if (mood === 'sleepy') o += `<g class="h-zz"><text x="${X + 70}" y="${Y - 70}" font-family="Outfit,sans-serif" font-weight="800" font-size="26" fill="${P}" opacity=".6">z</text><text x="${X + 92}" y="${Y - 92}" font-family="Outfit,sans-serif" font-weight="800" font-size="18" fill="${P}" opacity=".4">z</text></g>`;
+    const [zx, zy] = A.includes('h2') ? [20, 120] : [52, 76];
+    if (mood === 'sleepy') o += `<g class="h-zz"><text x="${X + zx}" y="${Y - zy}" font-family="Outfit,sans-serif" font-weight="800" font-size="26" fill="${P}" opacity=".6">z</text><text x="${X + zx + 17}" y="${Y - zy - 22}" font-family="Outfit,sans-serif" font-weight="800" font-size="18" fill="${P}" opacity=".4">z</text></g>`;
     o += `</g>`;
     if (c.stars !== false) o += `<g class="h-stars" opacity="${glow}">` + star(26, 40, 16, '#E0FF48') + star(334, 236, 12, '#F3BDFF') + star(318, 30, 9, '#90FFBB') + `</g>`;
     return o + '</svg>';
