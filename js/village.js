@@ -22,7 +22,7 @@
   function car(col, plugged) {
     return `<path d="M-58 -12 Q-60 -32 -38 -36 L-22 -56 Q-16 -62 -4 -62 H22 Q34 -62 42 -52 L54 -36 Q66 -34 66 -20 V-12Z" fill="${col}" stroke="${P}" stroke-width="${SW}" stroke-linejoin="round"/>` +
       `<path d="M-30 -38 L-18 -54 H2 V-38Z M10 -38 V-54 H22 Q30 -54 34 -48 L42 -38Z" fill="#DDF3FB" stroke="${P}" stroke-width="3.5" stroke-linejoin="round"/>` +
-      `<rect x="56" y="-30" width="9" height="6" rx="3" fill="#E0FF48" stroke="${P}" stroke-width="2.5"/>` +
+      `<rect x="57" y="-30" width="9" height="6" rx="3" fill="#FF6B8A" stroke="${P}" stroke-width="2.5"/><rect x="-66" y="-30" width="10" height="7" rx="3" fill="#E0FF48" stroke="${P}" stroke-width="2.5"/>` +
       [-34, 40].map(x => `<circle cx="${x}" cy="-10" r="13" fill="${P}"/><circle cx="${x}" cy="-10" r="5.5" fill="#E4F2F9"/>`).join('') +
       (plugged ? `<circle cx="-56" cy="-28" r="4" fill="#E0FF48" stroke="${P}" stroke-width="2.5"/>` : '');
   }
@@ -108,8 +108,8 @@
     // road with a passing car
     const r0 = g + 2 * k, rh = 30 * k;
     s += `<rect x="0" y="${r0}" width="${W}" height="${rh}" fill="#6E8C95"/><path d="M0 ${r0} H${W} M0 ${r0 + rh} H${W}" stroke="${P}" stroke-width="${3 * k}"/><path d="M0 ${r0 + rh / 2} H${W}" stroke="#fff" stroke-width="${3 * k}" stroke-dasharray="${22 * k} ${18 * k}"/>`;
-    s += `<g><animateTransform attributeName="transform" type="translate" from="${-140 * k} 0" to="${W + 140 * k} 0" dur="9s" repeatCount="indefinite"/>${at(0, r0 + rh * .78, k * .62, car('#8FD6FF'))}</g>`;
-    s += `<g><animateTransform attributeName="transform" type="translate" from="${W + 140 * k} 0" to="${-140 * k} 0" dur="12s" begin="-5s" repeatCount="indefinite"/>${at(0, r0 + rh * .42, k * .55, `<g transform="scale(-1 1)">${car('#E0FF48')}</g>`)}</g>`;
+    s += `<g><animateTransform attributeName="transform" type="translate" from="${-140 * k} 0" to="${W + 140 * k} 0" dur="9s" repeatCount="indefinite"/>${at(0, r0 + rh * .78, k * .62, `<g transform="scale(-1 1)">${car('#8FD6FF')}</g>`)}</g>`;
+    s += `<g><animateTransform attributeName="transform" type="translate" from="${W + 140 * k} 0" to="${-140 * k} 0" dur="12s" begin="-5s" repeatCount="indefinite"/>${at(0, r0 + rh * .42, k * .55, car('#E0FF48'))}</g>`;
     if (o.below) s += `<rect x="0" y="${r0 + rh}" width="${W}" height="${H - r0 - rh}" fill="${o.below}"/>`;
     if (o.plaza) {
       const p0 = r0 + rh;
