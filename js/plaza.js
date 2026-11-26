@@ -24,14 +24,11 @@
     station: {
       w: 1920, h: 752, rows: [{ n: 7, y: 318, s: 122, x0: 300, x1: 1620, c: 30 }, { n: 6, y: 470, s: 136, x0: 290, x1: 1630, c: 34 }, { n: 4, y: 622, s: 156, x0: 236, x1: 1684, c: 34, gap: true }],
       me: { x: 960, y: 640, s: 268 }, bg: () => {
-        let o = `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DDF0F8"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient></defs><rect width="1920" height="752" fill="url(#sky)"/>`;
-        o += `<circle cx="1716" cy="86" r="52" fill="#E0FF48" stroke="${P}" stroke-width="6"/>`;
-        o += `<path d="M0 232 Q300 150 620 214 T1260 196 T1920 226 V752 H0Z" fill="#D9FBE6"/>`;
-        o += turbine(196, 232, 138, 60, 6) + turbine(330, 222, 108, 46, 8) + turbine(1520, 214, 136, 56, 7);
-        o += tree(1372, 236, .78) + tree(566, 236, .64) + station(690, 46, .9);
+        let o = window.VILLAGE.scene(1920, 752, { g: 206, k: 1.1, below: '#CDFADF' });
         o += `<path d="M-60 268 Q960 196 1980 268 V752 H-60Z" fill="#CDFADF" stroke="${P}" stroke-width="5"/>`;
         o += `<path d="M-60 428 Q960 352 1980 428 V752 H-60Z" fill="#B2F5CD" stroke="${P}" stroke-width="5"/>`;
         o += `<path d="M-60 582 Q960 506 1980 582 V752 H-60Z" fill="#97EFBB" stroke="${P}" stroke-width="5"/>`;
+        o += [[70, 300], [1850, 300], [60, 460], [1860, 460], [90, 610], [1830, 610]].map(([x, y], i) => `<g transform="translate(${x} ${y}) scale(${i % 2 ? 1.3 : 1.1})">${window.VILLAGE.flowers}</g>`).join('');
         o += `<ellipse cx="960" cy="690" rx="236" ry="46" fill="${P}"/><ellipse cx="960" cy="676" rx="236" ry="46" fill="#E0FF48" stroke="${P}" stroke-width="6"/><ellipse cx="960" cy="674" rx="186" ry="33" fill="#F1FFA8"/>`;
         return o;
       },
@@ -39,9 +36,7 @@
     phone: {
       w: 390, h: 386, rows: [{ n: 5, y: 138, s: 60, x0: 46, x1: 344, c: 7 }, { n: 4, y: 206, s: 66, x0: 48, x1: 342, c: 9 }, { n: 2, y: 292, s: 74, x0: 88, x1: 302, c: 0 }],
       me: { x: 195, y: 330, s: 126 }, bg: () => {
-        let o = `<defs><linearGradient id="skyp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DDF0F8"/><stop offset="1" stop-color="#fff"/></linearGradient></defs><rect width="390" height="386" fill="url(#skyp)"/>`;
-        o += `<circle cx="346" cy="36" r="17" fill="#E0FF48" stroke="${P}" stroke-width="2.5"/><path d="M0 96 Q100 62 200 88 T390 84 V386 H0Z" fill="#D9FBE6"/>`;
-        o += turbine(40, 94, 60, 24, 6) + tree(322, 106, .32) + station(102, 32, .315);
+        let o = window.VILLAGE.scene(390, 386, { g: 84, k: .22, below: '#C4F8D9' });
         o += `<path d="M-20 122 Q195 88 410 122 V386 H-20Z" fill="#C4F8D9" stroke="${P}" stroke-width="2.5"/>`;
         o += `<path d="M-20 190 Q195 154 410 190 V386 H-20Z" fill="#A9F3C7" stroke="${P}" stroke-width="2.5"/>`;
         o += `<path d="M-20 268 Q195 228 410 268 V386 H-20Z" fill="#90EDB6" stroke="${P}" stroke-width="2.5"/>`;
